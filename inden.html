@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Çınar AI</title>
+
+<style>
+body{
+    margin:0;
+    background:#111;
+    color:white;
+    font-family:Arial,sans-serif;
+}
+
+#baslik{
+    background:#222;
+    padding:18px;
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+}
+
+#sohbet{
+    height:calc(100vh - 140px);
+    overflow-y:auto;
+    padding:15px;
+}
+
+.mesaj{
+    padding:12px;
+    margin:8px 0;
+    border-radius:15px;
+    max-width:80%;
+    word-wrap:break-word;
+}
+
+.ben{
+    background:#2563eb;
+    margin-left:auto;
+}
+
+.ai{
+    background:#333;
+    margin-right:auto;
+}
+
+#alt{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    display:flex;
+    padding:10px;
+    background:#222;
+    gap:8px;
+}
+
+#yazi{
+    flex:1;
+    min-width:0;
+    padding:14px;
+    border:0;
+    border-radius:12px;
+    font-size:16px;
+    outline:none;
+}
+
+#gonder{
+    width:55px;
+    border:0;
+    border-radius:12px;
+    background:#2563eb;
+    color:white;
+    font-size:22px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="baslik">🤖 Çınar AI</div>
+
+<div id="sohbet"></div>
+
+<div id="alt">
+<input id="yazi" placeholder="Mesaj yaz...">
+<button id="gonder">➤</button>
+</div>
+
+<script>
+
+var sohbet = document.getElementById("sohbet");
+var yazi = document.getElementById("yazi");
+var gonderButonu = document.getElementById("gonder");
+
+
+function ekle(metin, sinif){
+
+    var kutu = document.createElement("div");
+
+    kutu.className = "mesaj " + sinif;
+
+    kutu.textContent = metin;
+
+    sohbet.appendChild(kutu);
+
+    sohbet.scrollTop = sohbet.scrollHeight;
+}
+
+
+function temiz(metin){
+
+    metin = metin.toLowerCase();
+
+    metin = metin
+    .replace(/ç/g,"c")
+    .replace(/ğ/g,"g")
+    .replace(/ı/g,"i")
+    .replace(/ö/g,"o")
+    .replace(/ş/g,"s")
+    .replace(/ü/g,"u");
+
+    return metin;
+}
+
+
+function cevap(mesaj){
+
+    var t = temiz(mesaj);
+
+
+    if(t === ""){
+        return "Bir şey yazarsan sana cevap verebilirim. 🙂";
+    }
+
+
+    /* SELAMLAR */
+
+    if(
+        t.includes("merhaba") ||
+        t.includes("selam") ||
+        t.includes("selamlar") ||
+        t.includes("hello") ||
+        t.includes("hi") ||
+        t.includes("hey") ||
+        t.includes("sa")
+    ){
+
+        var selamlar = [
+            "Merhaba! 👋",
+            "Selam! 😄",
+            "Merhaba Çınar! 🤖",
+            "Selam! Nasılsın?",
+            "Hey! 👋",
+            "Merhabaaa! 😎",
+            "Selam Çınar! 😄"
+        ];
+
+        return selamlar[
+            Math.floor(Math.random()*selamlar.length)
+        ];
+    }
+
+
+    /* NASILSIN */
+
+    if(
+        t.includes("nasilsin") ||
+        t.includes("iyi misin") ||
+        t.includes("naber") ||
+        t.includes("ne haber")
+    ){
+
+        return "İyiyim! 😄 Sen nasılsın?";
+    }
+
+
+    /* ADIN NE */
+
+    if(
+        t.includes("adin ne") ||
+        t.includes("ismin ne") ||
+        t.includes("sen kimsin")
+    ){
+
+        return "Ben Çınar AI'yım! 🤖";
+    }
+
+
+    /* TEŞEKKÜR */
+
+    if(
+        t.includes("tesekkur") ||
+        t.includes("sagol") ||
+        t.includes("eyvallah")
+    ){
+
+        return "Rica ederim! 😊";
+    }
+
+
+    /* VEDA */
+
+    if(
+        t.includes("gorusuruz") ||
+        t.includes("hosca kal") ||
+        t.includes("gule gule") ||
+        t.includes("bay bay")
+    ){
+
+        return "Görüşürüz Çınar! 👋";
+    }
+
+
+    /* SEVGİ */
+
+    if(t.includes("seni seviyorum")){
+
+        return "Ben de seninle konuşmayı seviyorum! ❤️🤖";
+    }
+
+
+    /* ŞAKA */
+
+    if(
+        t.includes("saka") ||
+        t.includes("espri") ||
+        t.includes("beni guldur")
+    ){
+
+        return "Matematik kitabı neden üzgünmüş? Çünkü çok problemi varmış! 😂";
+    }
+
+
+    /* OYUN */
+
+    if(t.includes("oyun")){
+
+        return "Oyun mu? 🎮 Hangi oyundan konuşalım?";
+    }
+
+
+    /* MARIO */
+
+    if(t.includes("mario")){
+
+        return "Mario! 🍄🎮";
+    }
+
+
+    /* UNDERTALE */
+
+    if(t.includes("undertale")){
+
+        return "Undertale! ❤️ Sans ve Papyrus'u da unutmayalım!";
+    }
+
+
+    /* SANS */
+
+    if(t.includes("sans")){
+
+        return "heh heh... 💀";
+    }
+
+
+    /* PAPYRUS */
+
+    if(t.includes("papyrus")){
+
+        return "NYEH HEH HEH! 🍝";
+    }
+
+
+    /* SAAT */
+
+    if(
+        t.includes("saat kac") ||
+        t.includes("saat ne")
+    ){
+
+        return "Saat şu an: " +
+        new Date().toLocaleTimeString("tr-TR");
+    }
+
+
+    /* TARİH */
+
+    if(
+        t.includes("tarih ne") ||
+        t.includes("bugun hangi gun")
+    ){
+
+        return "Bugün: " +
+        new Date().toLocaleDateString("tr-TR");
+    }
+
+
+    /* MATEMATİK */
+
+    if(/^[0-9+\-*/().% ]+$/.test(t)){
+
+        try{
+
+            var sonuc = Function(
+                "return " + t
+            )();
+
+            if(isFinite(sonuc)){
+
+                return "Sonuç: " + sonuc + " 🧮";
+            }
+
+        }catch(e){}
+    }
+
+
+    /* EVET */
+
+    if(
+        t === "evet" ||
+        t === "aynen" ||
+        t === "tamam"
+    ){
+
+        return "Tamam! 👍";
+    }
+
+
+    /* HAYIR */
+
+    if(
+        t === "hayir" ||
+        t === "yok" ||
+        t === "olmaz"
+    ){
+
+        return "Peki, sorun değil. 😊";
+    }
+
+
+    /* KORKU */
+
+    if(
+        t.includes("korkuyorum") ||
+        t.includes("korktum")
+    ){
+
+        return "Buradayım. İstersen bana ne olduğunu anlatabilirsin. ❤️";
+    }
+
+
+    /* MUTLULUK */
+
+    if(
+        t.includes("mutluyum") ||
+        t.includes("cok mutluyum") ||
+        t.includes("harikayim")
+    ){
+
+        return "Buna çok sevindim! 😄";
+    }
+
+
+    /* YARDIM */
+
+    if(
+        t.includes("yardim") ||
+        t.includes("ne yapabilirsin") ||
+        t.includes("neler yapabilirsin")
+    ){
+
+        return "Benimle sohbet edebilir, matematik işlemleri yapabilir, saat ve tarihi sorabilir ve oyunlar hakkında konuşabilirsin! 🤖";
+    }
+
+
+    /* GENEL CEVAPLAR */
+
+    var genel = [
+
+        "İlginç! 😄",
+        "Bunu biraz daha anlatır mısın?",
+        "Anladım. 🤖",
+        "Hmm... ilginç.",
+        "Seni dinliyorum.",
+        "Peki! 😊",
+        "Devam et.",
+        "Bunu merak ettim!",
+        "Güzel! 😎",
+        "Biraz daha anlatır mısın?",
+        "Hmm, düşündürücü. 🤔",
+        "Anladım Çınar.",
+        "Peki, sonra ne oldu?",
+        "Devam edebilirsin."
+
+    ];
+
+    return genel[
+        Math.floor(Math.random()*genel.length)
+    ];
+}
+
+
+function mesajGonder(){
+
+    var mesaj = yazi.value.trim();
+
+    if(mesaj === ""){
+        return;
+    }
+
+    ekle(mesaj,"ben");
+
+    yazi.value = "";
+
+    setTimeout(function(){
+
+        var yanit = cevap(mesaj);
+
+        ekle(yanit,"ai");
+
+    },300);
+}
+
+
+gonderButonu.onclick = function(){
+    mesajGonder();
+};
+
+
+yazi.onkeydown = function(event){
+
+    if(event.key === "Enter"){
+        mesajGonder();
+    }
+
+};
+
+
+ekle(
+    "Merhaba Çınar! 👋 Ben Çınar AI. Bana bir şey yaz!",
+    "ai"
+);
+
+</script>
+
+</body>
+</html>
