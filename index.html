@@ -1,93 +1,94 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Çınar AI</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Çınar AI</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #101820, #1b2735);
-      color: white;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
 
-    header {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 18px;
-      text-align: center;
-      font-size: 25px;
-      font-weight: bold;
-    }
+header {
+    background: #1e293b;
+    padding: 18px;
+    text-align: center;
+    font-size: 25px;
+    font-weight: bold;
+    border-bottom: 1px solid #334155;
+}
 
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+#chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
 
-    .message {
-      max-width: 85%;
-      padding: 12px 16px;
-      border-radius: 18px;
-      line-height: 1.4;
-      white-space: pre-line;
-      word-wrap: break-word;
-    }
+.message {
+    max-width: 85%;
+    padding: 12px 15px;
+    margin: 10px 0;
+    border-radius: 15px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
 
-    .ai {
-      background: #2d8cff;
-      align-self: flex-start;
-      border-bottom-left-radius: 5px;
-    }
+.user {
+    background: #2563eb;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
 
-    .user {
-      background: #444;
-      align-self: flex-end;
-      border-bottom-right-radius: 5px;
-    }
+.ai {
+    background: #334155;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+}
 
-    #inputArea {
-      display: flex;
-      padding: 15px;
-      gap: 10px;
-      background: rgba(0, 0, 0, 0.3);
-    }
+#inputArea {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    background: #1e293b;
+    border-top: 1px solid #334155;
+}
 
-    #messageInput {
-      flex: 1;
-      border: none;
-      border-radius: 25px;
-      padding: 14px;
-      font-size: 16px;
-      outline: none;
-    }
+#input {
+    flex: 1;
+    padding: 13px;
+    border: none;
+    outline: none;
+    border-radius: 12px;
+    font-size: 16px;
+    background: #0f172a;
+    color: white;
+}
 
-    button {
-      border: none;
-      border-radius: 25px;
-      padding: 12px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      background: #2d8cff;
-      color: white;
-    }
+button {
+    border: none;
+    border-radius: 12px;
+    padding: 0 17px;
+    background: #2563eb;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
 
-    button:hover {
-      background: #1675db;
-    }
-  </style>
+button:active {
+    transform: scale(0.96);
+}
+</style>
 </head>
 
 <body>
@@ -95,531 +96,268 @@
 <header>🌳 Çınar AI</header>
 
 <div id="chat">
-  <div class="message ai">
-    👋 Merhaba! Ben Çınar AI. Sana nasıl yardımcı olabilirim?
-  </div>
+    <div class="message ai">
+        Merhaba! Ben Çınar AI. 😊<br>
+        Bana bir şey sorabilirsin.
+    </div>
 </div>
 
 <div id="inputArea">
-  <input
-    type="text"
-    id="messageInput"
-    placeholder="Bir şey yaz..."
-    autocomplete="off"
-  >
-  <button onclick="sendMessage()">Gönder</button>
+    <input id="input" type="text" placeholder="Çınar AI'ye bir şey yaz..." autocomplete="off">
+    <button onclick="sendMessage()">Gönder</button>
 </div>
 
 <script>
 
-let kullaniciAdi = null;
+const input = document.getElementById("input");
+const chat = document.getElementById("chat");
 
-
-// ==========================================
-// TARİH
-// ==========================================
-
-function tarih() {
-  return new Date().toLocaleDateString("tr-TR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
+/* Kullanıcının yazdığı cümleyi küçük harfe çevirir,
+   noktalama işaretlerini temizler ve Türkçe karakterleri korur. */
+function temizle(yazi) {
+    return yazi
+        .toLocaleLowerCase("tr-TR")
+        .replace(/[.,!?;:()[\]{}'"`]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
 }
 
+/* Küçük yazım hatalarını düzeltmeye yardımcı olur. */
+function yazimHatasiDuzelt(metin) {
 
-// ==========================================
-// SAAT
-// ==========================================
+    const kelimeDuzeltmeleri = {
+        "meraba": "merhaba",
+        "mrb": "merhaba",
+        "slm": "selam",
+        "selamm": "selam",
+        "naber": "ne haber",
+        "nasilsin": "nasılsın",
+        "nasılsın": "nasılsın",
+        "tesekkur": "teşekkür",
+        "tesekkurler": "teşekkürler",
+        "tşk": "teşekkür",
+        "sagol": "sağ ol",
+        "saol": "sağ ol",
+        "evettt": "evet",
+        "hayirr": "hayır",
+        "nedenki": "neden ki",
+        "napıyosun": "ne yapıyorsun",
+        "napıyorsun": "ne yapıyorsun",
+        "napiyosun": "ne yapıyorsun",
+        "saatkac": "saat kaç",
+        "saatkac": "saat kaç",
+        "saat": "saat"
+    };
 
-function saat() {
-  return new Date().toLocaleTimeString("tr-TR", {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
+    let kelimeler = metin.split(" ");
+
+    kelimeler = kelimeler.map(kelime => {
+        return kelimeDuzeltmeleri[kelime] || kelime;
+    });
+
+    return kelimeler.join(" ");
 }
 
+/* Mesajı ekrana ekler. */
+function mesajEkle(mesaj, tip) {
 
-// ==========================================
-// YIL
-// ==========================================
+    const div = document.createElement("div");
 
-function yil() {
-  return new Date().getFullYear();
+    div.className = "message " + tip;
+
+    div.innerHTML = mesaj;
+
+    chat.appendChild(div);
+
+    chat.scrollTop = chat.scrollHeight;
 }
 
+/* Saat sorularını yakalar. */
+function saatSorusu(metin) {
 
-// ==========================================
-// TÜRKÇE METNİ NORMALLEŞTİR
-// ==========================================
+    const saatKelimeleri = [
+        "saat kaç",
+        "saat kact",
+        "saat kac",
+        "şu an saat kaç",
+        "su an saat kac",
+        "şuan saat kaç",
+        "suan saat kac",
+        "şimdi saat kaç",
+        "simdi saat kac",
+        "saat kaç oldu",
+        "saat kac oldu",
+        "şu an saat kaç oldu",
+        "su an saat kac oldu"
+    ];
 
-function normalleştir(metin) {
-
-  let m = metin
-    .toLocaleLowerCase("tr-TR")
-    .trim();
-
-  // Noktalama işaretlerini kaldır
-  m = m.replace(/[!?.,;:]/g, "");
-
-  // Yaygın kısaltmalar
-  m = m.replace(/\bslm\b/g, "selam");
-  m = m.replace(/\bmrb\b/g, "merhaba");
-  m = m.replace(/\bnbr\b/g, "ne haber");
-
-  // Yaygın yazım hataları
-  m = m.replace(/naslsn/g, "nasılsın");
-  m = m.replace(/nasilsn/g, "nasılsın");
-  m = m.replace(/naslsin/g, "nasılsın");
-
-  m = m.replace(/yapabilrsin/g, "yapabilirsin");
-  m = m.replace(/yapabilrsn/g, "yapabilirsin");
-  m = m.replace(/yapabiliyon/g, "yapabiliyorsun");
-  m = m.replace(/yapabiliyosun/g, "yapabiliyorsun");
-
-  m = m.replace(/biliyon/g, "biliyorsun");
-  m = m.replace(/biliyosun/g, "biliyorsun");
-  m = m.replace(/biliom/g, "biliyorum");
-
-  m = m.replace(/napiyon/g, "ne yapıyorsun");
-  m = m.replace(/napıyon/g, "ne yapıyorsun");
-  m = m.replace(/napıyosun/g, "ne yapıyorsun");
-  m = m.replace(/napiyosun/g, "ne yapıyorsun");
-
-  m = m.replace(/tesekkur/g, "teşekkür");
-  m = m.replace(/tesekur/g, "teşekkür");
-  m = m.replace(/tşk/g, "teşekkür");
-
-  // Fazla boşlukları düzelt
-  m = m.replace(/\s+/g, " ");
-
-  return m;
+    return saatKelimeleri.some(soru => metin.includes(soru));
 }
 
+/* Saat bilgisini verir. */
+function gercekSaatiVer() {
 
-// ==========================================
-// BİR KELİME/İFADE VAR MI?
-// ==========================================
+    const simdi = new Date();
 
-function iceriyor(metin, liste) {
+    const saat = simdi.toLocaleTimeString("tr-TR", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
 
-  for (const ifade of liste) {
-    if (metin.includes(ifade)) {
-      return true;
+    return "🕐 Şu an saat <b>" + saat + "</b>.";
+}
+
+/* Basit yazım hatası kontrolü. */
+function yazimHatasiCevabi(orijinal, duzeltilmis) {
+
+    if (orijinal !== duzeltilmis) {
+
+        return {
+            mesaj:
+            "Sanırım <b>\"" +
+            duzeltilmis +
+            "\"</b> demek istedin. 😊"
+        };
     }
-  }
 
-  return false;
+    return null;
 }
 
+/* Çınar AI'nin cevap sistemi. */
+function cevapVer(mesaj) {
 
-// ==========================================
-// İSİM BUL
-// ==========================================
+    const orijinal = temizle(mesaj);
 
-function adBul(mesaj) {
+    const metin = yazimHatasiDuzelt(orijinal);
 
-  const desenler = [
-    /^benim adım (.+)$/i,
-    /^benim adim (.+)$/i,
-    /^adım (.+)$/i,
-    /^adim (.+)$/i
-  ];
-
-  for (const desen of desenler) {
-
-    const sonuc = mesaj.match(desen);
-
-    if (sonuc) {
-
-      let ad = sonuc[1].trim();
-
-      ad = ad.replace(/[.!?]+$/, "").trim();
-
-      if (ad.length > 0 && ad.length <= 30) {
-        return ad;
-      }
+    /* SAAT */
+    if (saatSorusu(metin)) {
+        return gercekSaatiVer();
     }
-  }
 
-  return null;
+    /* MERHABA */
+    if (
+        metin === "merhaba" ||
+        metin === "selam" ||
+        metin.includes("merhaba çınar ai") ||
+        metin.includes("selam çınar ai")
+    ) {
+        return "Merhaba! 👋 Ben Çınar AI. Nasılsın?";
+    }
+
+    /* NASILSIN */
+    if (
+        metin.includes("nasılsın") ||
+        metin.includes("nasilsin")
+    ) {
+        return "İyiyim! 😄 Seninle konuşmaya hazırım.";
+    }
+
+    /* SEN KİMSİN */
+    if (
+        metin.includes("sen kimsin") ||
+        metin.includes("kimsin")
+    ) {
+        return "Ben Çınar AI! 🌳 Senin için hazırlanmış bir yapay zekâ sohbet asistanıyım.";
+    }
+
+    /* ADIN NE */
+    if (
+        metin.includes("adın ne") ||
+        metin.includes("adin ne") ||
+        metin.includes("ismin ne")
+    ) {
+        return "Benim adım Çınar AI. 🌳";
+    }
+
+    /* KİM YAPTI */
+    if (
+        metin.includes("seni kim yaptı") ||
+        metin.includes("seni kim yapti") ||
+        metin.includes("kim yaptın") ||
+        metin.includes("kim yaptin")
+    ) {
+        return "Beni Çınar yaptı. 🌳🤖";
+    }
+
+    /* TEŞEKKÜR */
+    if (
+        metin.includes("teşekkür") ||
+        metin.includes("tesekkur") ||
+        metin.includes("sağ ol") ||
+        metin.includes("sag ol")
+    ) {
+        return "Rica ederim! 😊";
+    }
+
+    /* NASIL YARDIM */
+    if (
+        metin.includes("ne yapabilirsin") ||
+        metin.includes("neler yapabilirsin")
+    ) {
+        return "Sorularını cevaplayabilir, sohbet edebilir ve bazı yazım hatalarını anlayabilirim. 😊";
+    }
+
+    /* ŞAKA */
+    if (
+        metin.includes("şaka yap") ||
+        metin.includes("saka yap")
+    ) {
+        return "Bilgisayar neden doktora gitmiş? Çünkü virüs kapmış! 😂";
+    }
+
+    /* HAVA DURUMU */
+    if (
+        metin.includes("hava nasıl") ||
+        metin.includes("hava nasil")
+    ) {
+        return "Hava durumunu öğrenmek için konum bilgisine ve hava durumu verilerine erişmem gerekir. 🌤️";
+    }
+
+    /* GOOGLE */
+    if (metin.includes("google")) {
+        return "Google hakkında da konuşabiliriz. 🔎";
+    }
+
+    /* YAZIM HATASI VARSA */
+    const duzeltme = yazimHatasiCevabi(orijinal, metin);
+
+    if (duzeltme) {
+        return duzeltme.mesaj;
+    }
+
+    /* ANLAŞILMAYAN MESAJ */
+    return "Bunu tam anlayamadım. 🤔 Biraz farklı şekilde yazmayı deneyebilir misin?";
 }
 
-
-// ==========================================
-// MESAJ GÖNDER
-// ==========================================
-
+/* Mesaj gönderme */
 function sendMessage() {
 
-  const input =
-    document.getElementById("messageInput");
+    const mesaj = input.value.trim();
 
-  const chat =
-    document.getElementById("chat");
+    if (mesaj === "") return;
 
-  const mesaj =
-    input.value.trim();
+    mesajEkle(mesaj, "user");
 
-  if (mesaj === "") {
-    return;
-  }
+    input.value = "";
 
+    setTimeout(() => {
 
-  // Kullanıcı mesajı
-  const userMessage =
-    document.createElement("div");
+        const cevap = cevapVer(mesaj);
 
-  userMessage.className =
-    "message user";
+        mesajEkle(cevap, "ai");
 
-  userMessage.textContent =
-    mesaj;
-
-  chat.appendChild(userMessage);
-
-  input.value = "";
-
-
-  // Normalleştirilmiş mesaj
-  const m =
-    normalleştir(mesaj);
-
-
-  let cevap = null;
-
-
-  // ==========================================
-  // 1 — İSİM
-  // ==========================================
-
-  const yeniAd = adBul(mesaj);
-
-  if (yeniAd) {
-
-    kullaniciAdi = yeniAd;
-
-    cevap =
-      "😊 Memnun oldum, " +
-      kullaniciAdi +
-      "!";
-
-  }
-
-
-  // ==========================================
-  // 2 — NELER YAPABİLİRSİN?
-  // ==========================================
-
-  else if (
-    iceriyor(m, [
-      "neler yapabilirsin",
-      "ne yapabilirsin",
-      "neler biliyorsun",
-      "ne biliyorsun",
-      "yeteneklerin ne",
-      "yeteneklerin neler",
-      "hangi şeyleri yapabilirsin",
-      "hangi seyleri yapabilirsin",
-      "ne yapabiliyorsun",
-      "neler yapabiliyorsun",
-      "ne yapabiliyon",
-      "neler yapabiliyon",
-      "ne yapabiliyosun",
-      "neler yapabiliyosun",
-      "ne yapabilrsin",
-      "neler yapabilrsin",
-      "ne yapabilrsn",
-      "neler yapabilrsn"
-    ])
-  ) {
-
-    cevap =
-      "🤖 Ben Çınar AI!\n\n" +
-      "Şu anda şunları yapabiliyorum:\n\n" +
-      "👋 Selamlaşabilirim.\n" +
-      "😊 Nasıl olduğumu söyleyebilirim.\n" +
-      "👤 Adını öğrenip hatırlayabilirim.\n" +
-      "🕐 Saati söyleyebilirim.\n" +
-      "📅 Bugünün tarihini söyleyebilirim.\n" +
-      "📆 Hangi yılda olduğumuzu söyleyebilirim.\n" +
-      "💬 Bazı sorulara cevap verebilirim.\n" +
-      "🧠 Bazı yazım hatalarını anlayabilirim.\n\n" +
-      "🌳 Bana bir şey sorabilirsin!";
-
-  }
-
-
-  // ==========================================
-  // 3 — MERHABA
-  // ==========================================
-
-  else if (
-    iceriyor(m, [
-      "merhaba",
-      "selam",
-      "hey",
-      "sa"
-    ])
-  ) {
-
-    if (kullaniciAdi) {
-      cevap =
-        "👋 Merhaba " +
-        kullaniciAdi +
-        "!";
-    } else {
-      cevap =
-        "👋 Merhaba!";
-    }
-
-  }
-
-
-  // ==========================================
-  // 4 — NASILSIN?
-  // ==========================================
-
-  else if (
-    iceriyor(m, [
-      "nasılsın",
-      "iyi misin",
-      "ne haber"
-    ])
-  ) {
-
-    if (kullaniciAdi) {
-      cevap =
-        "😊 İyiyim, teşekkür ederim " +
-        kullaniciAdi +
-        "!";
-    } else {
-      cevap =
-        "😊 İyiyim, teşekkür ederim!";
-    }
-
-  }
-
-
-  // ==========================================
-  // 5 — SAAT
-  // ==========================================
-
-  else if (
-    iceriyor(m, [
-      "saat kaç",
-      "saat kac",
-      "şu an saat",
-      "su an saat",
-      "şimdi saat",
-      "simdi saat"
-    ])
-  ) {
-
-    cevap =
-      "🕐 Şu an saat " +
-      saat() +
-      ".";
-
-  }
-
-
-  // ==========================================
-  // 6 — TARİH
-  // ==========================================
-
-  else if (
-    iceriyor(m, [
-      "bugün tarih",
-      "bugun tarih",
-      "bugünün tarihi",
-      "bugunun tarihi",
-      "bugün hangi tarih",
-      "bugun hangi tarih",
-      "tarih ne"
-    ])
-  ) {
-
-    cevap =
-      "📅 Bugünün tarihi " +
-      tarih() +
-      ".";
-
-  }
-
-
-  // ==========================================
-  // 7 — YIL
-  // ==========================================
-
-  else if (
-    iceriyor(m, [
-      "hangi yıldayız",
-      "hangi yildayiz",
-      "şu an hangi yıldayız",
-      "su an hangi yildayiz",
-      "hangi yıl",
-      "hangi yil",
-      "yıl kaç",
-      "yil kac"
-    ])
-  ) {
-
-    cevap =
-      "📆 Şu anda " +
-      yil() +
-      " yılındayız.";
-
-  }
-
-
-  // ==========================================
-  // 8 — BENİM ADIM NE?
-  // ==========================================
-
-  else if (
-    iceriyor(m, [
-      "benim adım ne",
-      "benim adim ne",
-      "adım ne",
-      "adim ne"
-    ])
-  ) {
-
-    if (kullaniciAdi) {
-
-      cevap =
-        "👤 Adın " +
-        kullaniciAdi +
-        ".";
-
-    } else {
-
-      cevap =
-        "🤔 Bana adını henüz söylemedin.";
-
-    }
-
-  }
-
-
-  // ==========================================
-  // 9 — SEN KİMSİN?
-  // ==========================================
-
-  else if (
-    iceriyor(m, [
-      "kimsin",
-      "sen kimsin",
-      "adın ne",
-      "adin ne",
-      "senin adın ne",
-      "senin adin ne"
-    ])
-  ) {
-
-    cevap =
-      "🤖 Ben Çınar AI! Seninle sohbet etmek için buradayım.";
-
-  }
-
-
-  // ==========================================
-  // 10 — TEŞEKKÜR
-  // ==========================================
-
-  else if (
-    iceriyor(m, [
-      "teşekkür",
-      "sağ ol",
-      "sag ol",
-      "eyvallah"
-    ])
-  ) {
-
-    cevap =
-      "😊 Rica ederim!";
-
-  }
-
-
-  // ==========================================
-  // 11 — GÜLE GÜLE
-  // ==========================================
-
-  else if (
-    iceriyor(m, [
-      "güle güle",
-      "gule gule",
-      "hoşça kal",
-      "hosca kal",
-      "görüşürüz",
-      "gorusuruz",
-      "bye"
-    ])
-  ) {
-
-    cevap =
-      "👋 Görüşürüz! Kendine iyi bak!";
-
-  }
-
-
-  // ==========================================
-  // 12 — ANLAŞILMAYAN MESAJ
-  // ==========================================
-
-  if (cevap === null) {
-
-    cevap =
-      "🤔 Bunu tam anlayamadım.\n\n" +
-      "Biraz farklı şekilde yazmayı deneyebilirsin. " +
-      "İstersen \"Neler yapabilirsin?\" diye sorabilirsin. 😊";
-
-  }
-
-
-  // ==========================================
-  // CEVAP
-  // ==========================================
-
-  setTimeout(() => {
-
-    const aiMessage =
-      document.createElement("div");
-
-    aiMessage.className =
-      "message ai";
-
-    aiMessage.textContent =
-      cevap;
-
-    chat.appendChild(aiMessage);
-
-    chat.scrollTop =
-      chat.scrollHeight;
-
-  }, 400);
-
-
-  chat.scrollTop =
-    chat.scrollHeight;
+    }, 300);
 }
 
-
-// ==========================================
-// ENTER İLE GÖNDER
-// ==========================================
-
-document
-  .getElementById("messageInput")
-  .addEventListener("keypress", function(event) {
+/* Enter ile gönder */
+input.addEventListener("keydown", function(event) {
 
     if (event.key === "Enter") {
-      sendMessage();
+        sendMessage();
     }
 
-  });
+});
 
 </script>
 
