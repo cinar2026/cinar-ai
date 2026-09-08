@@ -114,9 +114,9 @@ button:active {
 
 <script>
 
-/* =========================================
+/* ================================
    YAZIYI NORMALLEŞTİR
-========================================= */
+================================ */
 
 function normalizeText(text) {
     return text
@@ -127,21 +127,18 @@ function normalizeText(text) {
 }
 
 
-/* =========================================
-   SIK YAPILAN YAZIM HATALARI
-========================================= */
+/* ================================
+   SIK YAPILAN HATALAR
+================================ */
 
 const corrections = {
-
     "meraba": "merhaba",
     "merhba": "merhaba",
     "merhbaa": "merhaba",
-    "merhbaaa": "merhaba",
     "mrb": "merhaba",
 
     "slm": "selam",
     "selamm": "selam",
-    "selaam": "selam",
 
     "nasilsin": "nasılsın",
     "nasılsn": "nasılsın",
@@ -158,7 +155,6 @@ const corrections = {
 
     "sagol": "sağ ol",
     "saol": "sağ ol",
-    "sagolll": "sağ ol",
 
     "saatkac": "saat kaç",
     "saatkaç": "saat kaç",
@@ -166,48 +162,35 @@ const corrections = {
 
     "simdi": "şimdi",
     "suan": "şu an",
-    "su an": "şu an",
+    "suanda": "şu anda",
 
     "napiyosun": "ne yapıyorsun",
     "napıyosun": "ne yapıyorsun",
     "napiosun": "ne yapıyorsun",
 
     "adinne": "adın ne",
-    "adınne": "adın ne",
     "isminne": "ismin ne",
 
     "yapabilirmisin": "yapabilir misin",
     "edermisin": "eder misin",
-    "yazarmisin": "yazar mısın",
-    "soylermisin": "söyler misin",
-    "söylermisin": "söyler misin",
-
-    "nedenki": "neden ki",
-
-    "tamammm": "tamam",
-    "olurrr": "olur",
-    "olmazzz": "olmaz",
 
     "cok": "çok",
-    "cokkk": "çok",
-
-    "cinar": "çınar",
-    "çınarr": "çınar"
+    "cinar": "çınar"
 };
 
 
-/* =========================================
-   FAZLA TEKRARLANAN HARFLERİ AZALT
-========================================= */
+/* ================================
+   FAZLA HARFLERİ AZALT
+================================ */
 
 function reduceRepeatedLetters(word) {
     return word.replace(/(.)\1{2,}/g, "$1$1");
 }
 
 
-/* =========================================
-   YAZIM HATALARINI DÜZELT
-========================================= */
+/* ================================
+   YAZIM HATASI DÜZELT
+================================ */
 
 function fixText(text) {
 
@@ -218,36 +201,23 @@ function fixText(text) {
         .map(word => reduceRepeatedLetters(word))
         .join(" ");
 
-    result = correctWords(result);
-
-    return result;
-}
-
-
-function correctWords(text) {
-
-    let words = text.split(" ");
+    let words = result.split(" ");
 
     words = words.map(word => {
-
-        if (corrections[word]) {
-            return corrections[word];
-        }
-
-        return word;
+        return corrections[word] || word;
     });
 
     return words.join(" ");
 }
 
 
-/* =========================================
+/* ================================
    SAAT SORUSU
-========================================= */
+================================ */
 
 function isTimeQuestion(text) {
 
-    const patterns = [
+    const words = [
         "saat kaç",
         "saat kac",
         "saatkac",
@@ -258,64 +228,74 @@ function isTimeQuestion(text) {
         "şuan saat kaç",
         "suan saat kac",
         "şimdi saat kaç",
-        "simdi saat kac"
+        "simdi saat kac",
+        "şu an saat kaç oldu",
+        "su an saat kac oldu"
     ];
 
-    return patterns.some(pattern => text.includes(pattern));
+    return words.some(x => text.includes(x));
 }
 
 
-/* =========================================
-   GÜNCEL SAAT
-========================================= */
+/* ================================
+   SAATİ SÖYLE
+================================ */
 
 function getCurrentTime() {
 
     const now = new Date();
 
-    const hour = String(now.getHours()).padStart(2, "0");
-    const minute = String(now.getMinutes()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
 
-    return "🕐 Şu an saat <b>" + hour + ":" + minute + "</b>.";
+    return "🕐 Şu an saat <b>" +
+        hours + ":" + minutes +
+        "</b>.";
 }
 
 
-/* =========================================
+/* ================================
    TARİH SORUSU
-========================================= */
+================================ */
 
 function isDateQuestion(text) {
 
-    const patterns = [
+    /*
+       Burada özellikle sadece birkaç cümleye
+       bağlı kalmıyoruz.
 
-        "bugünün tarihi",
-        "bugunun tarihi",
-        "bugün tarih ne",
-        "bugun tarih ne",
-        "bugünün tarihi ne",
-        "bugunun tarihi ne",
+       Kullanıcı "tarih" veya "bugün" dediğinde
+       tarih sorusu olarak algılamaya çalışıyoruz.
+    */
 
-        "tarih ne",
-        "tarih nedir",
-        "bugün ayın kaçı",
-        "bugun ayin kaci",
-        "ayın kaçı",
-        "ayin kaci",
+    if (text.includes("bugünün tarihi")) return true;
+    if (text.includes("bugunun tarihi")) return true;
+    if (text.includes("bugün tarih")) return true;
+    if (text.includes("bugun tarih")) return true;
 
-        "hangi tarihteyiz",
-        "hangi tarihteyiz",
-        "bugün hangi tarih",
-        "bugun hangi tarih"
-    ];
+    if (text.includes("tarih ne")) return true;
+    if (text.includes("tarih nedir")) return true;
 
-    return patterns.some(pattern => text.includes(pattern));
+    if (text.includes("hangi tarihteyiz")) return true;
+    if (text.includes("hangi tarihteyiz")) return true;
+
+    if (text.includes("bugün ayın kaçı")) return true;
+    if (text.includes("bugun ayin kaci")) return true;
+
+    if (text.includes("ayın kaçı")) return true;
+    if (text.includes("ayin kaci")) return true;
+
+    if (text.includes("bugün hangi tarih")) return true;
+    if (text.includes("bugun hangi tarih")) return true;
+
+    return false;
 }
 
 
-/* =========================================
-   GÜNCEL TARİH
-   FORMAT: GG.AA.YYYY
-========================================= */
+/* ================================
+   TAM TARİHİ SÖYLE
+   GG.AA.YYYY
+================================ */
 
 function getCurrentDate() {
 
@@ -326,59 +306,57 @@ function getCurrentDate() {
     const year = now.getFullYear();
 
     return "📅 Bugünün tarihi <b>" +
-        day + "." + month + "." + year +
+        day + "." +
+        month + "." +
+        year +
         "</b>.";
 }
 
 
-/* =========================================
+/* ================================
    YIL SORUSU
-========================================= */
+================================ */
 
 function isYearQuestion(text) {
 
-    const patterns = [
-        "hangi yıldayız",
-        "hangi yildayiz",
-        "hangi yıldayız",
-        "hangi yıl",
-        "hangi yil",
-        "şu an hangi yıl",
-        "su an hangi yil",
-        "bu yıl kaç",
-        "bu yil kac"
-    ];
+    if (text.includes("hangi yıldayız")) return true;
+    if (text.includes("hangi yildayiz")) return true;
+    if (text.includes("hangi yıl")) return true;
+    if (text.includes("hangi yil")) return true;
+    if (text.includes("şu an hangi yıl")) return true;
+    if (text.includes("su an hangi yil")) return true;
+    if (text.includes("bu yıl kaç")) return true;
+    if (text.includes("bu yil kac")) return true;
 
-    return patterns.some(pattern => text.includes(pattern));
+    return false;
 }
 
+
+/* ================================
+   YILI SÖYLE
+================================ */
 
 function getCurrentYear() {
 
     const year = new Date().getFullYear();
 
-    return "📅 Şu an <b>" + year + "</b> yılındayız.";
+    return "📅 Şu an <b>" +
+        year +
+        "</b> yılındayız.";
 }
 
 
-/* =========================================
-   ÇINAR AI CEVAP SİSTEMİ
-========================================= */
+/* ================================
+   ÇINAR AI CEVAP MOTORU
+================================ */
 
-function getAnswer(originalMessage) {
+function getAnswer(message) {
 
-    const original = normalizeText(originalMessage);
-    const text = fixText(originalMessage);
-
-
-    /* SAAT */
-
-    if (isTimeQuestion(text)) {
-        return getCurrentTime();
-    }
+    const original = normalizeText(message);
+    const text = fixText(message);
 
 
-    /* TAM TARİH */
+    /* TARİH */
 
     if (isDateQuestion(text)) {
         return getCurrentDate();
@@ -389,6 +367,13 @@ function getAnswer(originalMessage) {
 
     if (isYearQuestion(text)) {
         return getCurrentYear();
+    }
+
+
+    /* SAAT */
+
+    if (isTimeQuestion(text)) {
+        return getCurrentTime();
     }
 
 
@@ -430,7 +415,7 @@ function getAnswer(originalMessage) {
         text.includes("sen kimsin") ||
         text === "kimsin"
     ) {
-        return "Ben Çınar AI! 🌳 Senin için hazırlanmış bir yapay zekâ sohbet asistanıyım.";
+        return "Ben Çınar AI! 🌳🤖 Senin için hazırlanmış bir yapay zekâ sohbet asistanıyım.";
     }
 
 
@@ -450,10 +435,9 @@ function getAnswer(originalMessage) {
 
     if (
         text.includes("ne yapabilirsin") ||
-        text.includes("neler yapabilirsin") ||
-        text.includes("ne yapıyorsun")
+        text.includes("neler yapabilirsin")
     ) {
-        return "Sorularını cevaplayabilir, sohbet edebilir, saati ve tarihi söyleyebilir ve sık yapılan bazı yazım hatalarını anlayabilirim. 😊";
+        return "Sorularını cevaplayabilir, sohbet edebilir, saati ve bugünün tarihini söyleyebilir ve sık yapılan yazım hatalarını anlayabilirim. 😊";
     }
 
 
@@ -490,7 +474,7 @@ function getAnswer(originalMessage) {
     /* YAZIM HATASI ALGILANDI */
 
     if (original !== text) {
-        return "Seni anladım. 😊 Yazım hatası olsa bile ne demek istediğini anlamaya çalışıyorum.";
+        return "Seni anladım. 😊 Yazım hatası olsa bile ne demek istediğini anlayabiliyorum.";
     }
 
 
@@ -500,9 +484,9 @@ function getAnswer(originalMessage) {
 }
 
 
-/* =========================================
-   MESAJ EKLE
-========================================= */
+/* ================================
+   MESAJI EKRANA EKLE
+================================ */
 
 function addMessage(text, type) {
 
@@ -518,9 +502,9 @@ function addMessage(text, type) {
 }
 
 
-/* =========================================
+/* ================================
    MESAJ GÖNDER
-========================================= */
+================================ */
 
 function sendMessage() {
 
@@ -544,9 +528,9 @@ function sendMessage() {
 }
 
 
-/* =========================================
-   ENTER İLE GÖNDER
-========================================= */
+/* ================================
+   ENTER TUŞU
+================================ */
 
 input.addEventListener("keydown", function(event) {
 
