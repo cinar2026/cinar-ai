@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html lang="tr">
+<!DOCTYPE html><html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Çınar AI</title>
-
-  <style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Çınar AI</title>  <style>
     * {
       box-sizing: border-box;
     }
@@ -86,30 +81,18 @@
     button:hover {
       background: #1675db;
     }
-  </style>
-</head>
-
-<body>
-
-  <header>🌳 Çınar AI</header>
-
-  <div id="chat">
-    <!-- Çınar AI'ın ilk mesajı -->
+  </style></head><body>  <header>🌳 Çınar AI</header>  <div id="chat">
     <div class="message ai">
       👋 Merhaba! Ben Çınar AI. Sana nasıl yardımcı olabilirim?
     </div>
-  </div>
-
-  <div id="inputArea">
+  </div>  <div id="inputArea">
     <input
       type="text"
       id="messageInput"
       placeholder="Bir şey yaz..."
     >
     <button onclick="sendMessage()">Gönder</button>
-  </div>
-
-  <script>
+  </div>  <script>
     function sendMessage() {
       const input = document.getElementById("messageInput");
       const chat = document.getElementById("chat");
@@ -118,7 +101,7 @@
 
       if (message === "") return;
 
-      // Kullanıcının mesajı
+      // Kullanıcının mesajını ekle
       const userMessage = document.createElement("div");
       userMessage.className = "message user";
       userMessage.textContent = message;
@@ -126,42 +109,103 @@
 
       input.value = "";
 
-      // Çınar AI cevap veriyor
+      // Mesajı küçük harfe çevir
+      const m = message.toLowerCase();
+
+      let cevap;
+
+      // SELAMLAŞMA
+      if (
+        m === "merhaba" ||
+        m === "selam" ||
+        m === "sa" ||
+        m.includes("merhaba!") ||
+        m.includes("selam!")
+      ) {
+        cevap = "👋 Merhaba! Nasılsın? Sana nasıl yardımcı olabilirim?";
+      }
+
+      // NASILSIN
+      else if (
+        m.includes("nasılsın") ||
+        m.includes("nasilsin") ||
+        m.includes("iyi misin")
+      ) {
+        cevap = "😊 İyiyim, teşekkür ederim! Sen nasılsın?";
+      }
+
+      // TEŞEKKÜR
+      else if (
+        m.includes("teşekkür") ||
+        m.includes("tesekkur") ||
+        m.includes("sağ ol") ||
+        m.includes("sag ol")
+      ) {
+        cevap = "😊 Rica ederim! Her zaman yardımcı olmaya çalışırım.";
+      }
+
+      // GÜLE GÜLE
+      else if (
+        m.includes("güle güle") ||
+        m.includes("gule gule") ||
+        m.includes("hoşça kal") ||
+        m.includes("hosca kal") ||
+        m === "bye"
+      ) {
+        cevap = "👋 Görüşürüz! Kendine iyi bak!";
+      }
+
+      // KİMSİN
+      else if (
+        m.includes("sen kimsin") ||
+        m.includes("kimsin")
+      ) {
+        cevap = "🤖 Ben Çınar AI. Sorularını cevaplamak ve seninle sohbet etmek için buradayım.";
+      }
+
+      // NE YAPIYORSUN
+      else if (
+        m.includes("ne yapıyorsun") ||
+        m.includes("ne yapiyorsun")
+      ) {
+        cevap = "😄 Şu anda seninle sohbet ediyorum!";
+      }
+
+      // GENEL CEVAPLAR
+      else {
+        const cevaplar = [
+          "🤔 İlginç! Biraz daha anlatır mısın?",
+          "😊 Anladım. Bunu biraz daha açıklayabilir misin?",
+          "💡 Bunu birlikte çözmeye çalışabiliriz.",
+          "👍 Anladım!",
+          "🤖 Bunun hakkında düşünmem gerekiyor.",
+          "😊 Tabii! Sana yardımcı olmaya çalışacağım."
+        ];
+
+        cevap =
+          cevaplar[Math.floor(Math.random() * cevaplar.length)];
+      }
+
+      // AI cevabını göster
       setTimeout(() => {
         const aiMessage = document.createElement("div");
         aiMessage.className = "message ai";
+        aiMessage.textContent = cevap;
 
-        const cevaplar = [
-          "Bunu duymak güzel! 😊",
-          "Sana yardımcı olmaya çalışacağım!",
-          "İlginç bir soru! 🤔",
-          "Biraz daha anlatır mısın?",
-          "Tabii ki! 😊"
-        ];
-
-        const randomCevap =
-          cevaplar[Math.floor(Math.random() * cevaplar.length)];
-
-        aiMessage.textContent = randomCevap;
         chat.appendChild(aiMessage);
-
         chat.scrollTop = chat.scrollHeight;
       }, 500);
 
       chat.scrollTop = chat.scrollHeight;
     }
 
-    // Enter tuşuyla mesaj gönderme
+    // Enter tuşuyla gönderme
     document
       .getElementById("messageInput")
       .addEventListener("keypress", function(event) {
-
         if (event.key === "Enter") {
           sendMessage();
         }
-
       });
-  </script>
-
-</body>
+  </script></body>
 </html>
