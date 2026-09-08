@@ -1,7 +1,11 @@
-<!DOCTYPE html><html lang="tr">
+<!DOCTYPE html>
+<html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Çınar AI</title>  <style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Çınar AI</title>
+
+  <style>
     * {
       box-sizing: border-box;
     }
@@ -34,10 +38,11 @@
     }
 
     .message {
-      max-width: 80%;
+      max-width: 85%;
       padding: 12px 16px;
       border-radius: 18px;
       line-height: 1.4;
+      white-space: pre-line;
       word-wrap: break-word;
     }
 
@@ -82,469 +87,541 @@
     button:hover {
       background: #1675db;
     }
-  </style></head><body>  <header>🌳 Çınar AI</header>  <div id="chat">
-    <div class="message ai">
-      👋 Merhaba! Ben Çınar AI. Sana nasıl yardımcı olabilirim?
-    </div>
-  </div>  <div id="inputArea">
-    <input
-      type="text"
-      id="messageInput"
-      placeholder="Bir şey yaz..."
-    ><button onclick="sendMessage()">Gönder</button>
+  </style>
+</head>
 
-  </div>  <script>
+<body>
 
-    // ==================================================
-    // GEÇİCİ İSİM HAFIZASI
-    // Sayfa kapanınca isim tamamen unutulur.
-    // ==================================================
+<header>🌳 Çınar AI</header>
 
-    let kullaniciAdi = null;
+<div id="chat">
+  <div class="message ai">
+    👋 Merhaba! Ben Çınar AI. Sana nasıl yardımcı olabilirim?
+  </div>
+</div>
+
+<div id="inputArea">
+  <input
+    type="text"
+    id="messageInput"
+    placeholder="Bir şey yaz..."
+    autocomplete="off"
+  >
+  <button onclick="sendMessage()">Gönder</button>
+</div>
+
+<script>
+
+let kullaniciAdi = null;
 
 
-    // ==================================================
-    // TARİH VE SAAT
-    // ==================================================
+// ==========================================
+// TARİH
+// ==========================================
 
-    function saat() {
+function tarih() {
+  return new Date().toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+}
 
-      const simdi = new Date();
 
-      return simdi.toLocaleTimeString("tr-TR", {
-        hour: "2-digit",
-        minute: "2-digit"
-      });
+// ==========================================
+// SAAT
+// ==========================================
+
+function saat() {
+  return new Date().toLocaleTimeString("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+
+// ==========================================
+// YIL
+// ==========================================
+
+function yil() {
+  return new Date().getFullYear();
+}
+
+
+// ==========================================
+// TÜRKÇE METNİ NORMALLEŞTİR
+// ==========================================
+
+function normalleştir(metin) {
+
+  let m = metin
+    .toLocaleLowerCase("tr-TR")
+    .trim();
+
+  // Noktalama işaretlerini kaldır
+  m = m.replace(/[!?.,;:]/g, "");
+
+  // Yaygın kısaltmalar
+  m = m.replace(/\bslm\b/g, "selam");
+  m = m.replace(/\bmrb\b/g, "merhaba");
+  m = m.replace(/\bnbr\b/g, "ne haber");
+
+  // Yaygın yazım hataları
+  m = m.replace(/naslsn/g, "nasılsın");
+  m = m.replace(/nasilsn/g, "nasılsın");
+  m = m.replace(/naslsin/g, "nasılsın");
+
+  m = m.replace(/yapabilrsin/g, "yapabilirsin");
+  m = m.replace(/yapabilrsn/g, "yapabilirsin");
+  m = m.replace(/yapabiliyon/g, "yapabiliyorsun");
+  m = m.replace(/yapabiliyosun/g, "yapabiliyorsun");
+
+  m = m.replace(/biliyon/g, "biliyorsun");
+  m = m.replace(/biliyosun/g, "biliyorsun");
+  m = m.replace(/biliom/g, "biliyorum");
+
+  m = m.replace(/napiyon/g, "ne yapıyorsun");
+  m = m.replace(/napıyon/g, "ne yapıyorsun");
+  m = m.replace(/napıyosun/g, "ne yapıyorsun");
+  m = m.replace(/napiyosun/g, "ne yapıyorsun");
+
+  m = m.replace(/tesekkur/g, "teşekkür");
+  m = m.replace(/tesekur/g, "teşekkür");
+  m = m.replace(/tşk/g, "teşekkür");
+
+  // Fazla boşlukları düzelt
+  m = m.replace(/\s+/g, " ");
+
+  return m;
+}
+
+
+// ==========================================
+// BİR KELİME/İFADE VAR MI?
+// ==========================================
+
+function iceriyor(metin, liste) {
+
+  for (const ifade of liste) {
+    if (metin.includes(ifade)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+// ==========================================
+// İSİM BUL
+// ==========================================
+
+function adBul(mesaj) {
+
+  const desenler = [
+    /^benim adım (.+)$/i,
+    /^benim adim (.+)$/i,
+    /^adım (.+)$/i,
+    /^adim (.+)$/i
+  ];
+
+  for (const desen of desenler) {
+
+    const sonuc = mesaj.match(desen);
+
+    if (sonuc) {
+
+      let ad = sonuc[1].trim();
+
+      ad = ad.replace(/[.!?]+$/, "").trim();
+
+      if (ad.length > 0 && ad.length <= 30) {
+        return ad;
+      }
+    }
+  }
+
+  return null;
+}
+
+
+// ==========================================
+// MESAJ GÖNDER
+// ==========================================
+
+function sendMessage() {
+
+  const input =
+    document.getElementById("messageInput");
+
+  const chat =
+    document.getElementById("chat");
+
+  const mesaj =
+    input.value.trim();
+
+  if (mesaj === "") {
+    return;
+  }
+
+
+  // Kullanıcı mesajı
+  const userMessage =
+    document.createElement("div");
+
+  userMessage.className =
+    "message user";
+
+  userMessage.textContent =
+    mesaj;
+
+  chat.appendChild(userMessage);
+
+  input.value = "";
+
+
+  // Normalleştirilmiş mesaj
+  const m =
+    normalleştir(mesaj);
+
+
+  let cevap = null;
+
+
+  // ==========================================
+  // 1 — İSİM
+  // ==========================================
+
+  const yeniAd = adBul(mesaj);
+
+  if (yeniAd) {
+
+    kullaniciAdi = yeniAd;
+
+    cevap =
+      "😊 Memnun oldum, " +
+      kullaniciAdi +
+      "!";
+
+  }
+
+
+  // ==========================================
+  // 2 — NELER YAPABİLİRSİN?
+  // ==========================================
+
+  else if (
+    iceriyor(m, [
+      "neler yapabilirsin",
+      "ne yapabilirsin",
+      "neler biliyorsun",
+      "ne biliyorsun",
+      "yeteneklerin ne",
+      "yeteneklerin neler",
+      "hangi şeyleri yapabilirsin",
+      "hangi seyleri yapabilirsin",
+      "ne yapabiliyorsun",
+      "neler yapabiliyorsun",
+      "ne yapabiliyon",
+      "neler yapabiliyon",
+      "ne yapabiliyosun",
+      "neler yapabiliyosun",
+      "ne yapabilrsin",
+      "neler yapabilrsin",
+      "ne yapabilrsn",
+      "neler yapabilrsn"
+    ])
+  ) {
+
+    cevap =
+      "🤖 Ben Çınar AI!\n\n" +
+      "Şu anda şunları yapabiliyorum:\n\n" +
+      "👋 Selamlaşabilirim.\n" +
+      "😊 Nasıl olduğumu söyleyebilirim.\n" +
+      "👤 Adını öğrenip hatırlayabilirim.\n" +
+      "🕐 Saati söyleyebilirim.\n" +
+      "📅 Bugünün tarihini söyleyebilirim.\n" +
+      "📆 Hangi yılda olduğumuzu söyleyebilirim.\n" +
+      "💬 Bazı sorulara cevap verebilirim.\n" +
+      "🧠 Bazı yazım hatalarını anlayabilirim.\n\n" +
+      "🌳 Bana bir şey sorabilirsin!";
+
+  }
+
+
+  // ==========================================
+  // 3 — MERHABA
+  // ==========================================
+
+  else if (
+    iceriyor(m, [
+      "merhaba",
+      "selam",
+      "hey",
+      "sa"
+    ])
+  ) {
+
+    if (kullaniciAdi) {
+      cevap =
+        "👋 Merhaba " +
+        kullaniciAdi +
+        "!";
+    } else {
+      cevap =
+        "👋 Merhaba!";
+    }
+
+  }
+
+
+  // ==========================================
+  // 4 — NASILSIN?
+  // ==========================================
+
+  else if (
+    iceriyor(m, [
+      "nasılsın",
+      "iyi misin",
+      "ne haber"
+    ])
+  ) {
+
+    if (kullaniciAdi) {
+      cevap =
+        "😊 İyiyim, teşekkür ederim " +
+        kullaniciAdi +
+        "!";
+    } else {
+      cevap =
+        "😊 İyiyim, teşekkür ederim!";
+    }
+
+  }
+
+
+  // ==========================================
+  // 5 — SAAT
+  // ==========================================
+
+  else if (
+    iceriyor(m, [
+      "saat kaç",
+      "saat kac",
+      "şu an saat",
+      "su an saat",
+      "şimdi saat",
+      "simdi saat"
+    ])
+  ) {
+
+    cevap =
+      "🕐 Şu an saat " +
+      saat() +
+      ".";
+
+  }
+
+
+  // ==========================================
+  // 6 — TARİH
+  // ==========================================
+
+  else if (
+    iceriyor(m, [
+      "bugün tarih",
+      "bugun tarih",
+      "bugünün tarihi",
+      "bugunun tarihi",
+      "bugün hangi tarih",
+      "bugun hangi tarih",
+      "tarih ne"
+    ])
+  ) {
+
+    cevap =
+      "📅 Bugünün tarihi " +
+      tarih() +
+      ".";
+
+  }
+
+
+  // ==========================================
+  // 7 — YIL
+  // ==========================================
+
+  else if (
+    iceriyor(m, [
+      "hangi yıldayız",
+      "hangi yildayiz",
+      "şu an hangi yıldayız",
+      "su an hangi yildayiz",
+      "hangi yıl",
+      "hangi yil",
+      "yıl kaç",
+      "yil kac"
+    ])
+  ) {
+
+    cevap =
+      "📆 Şu anda " +
+      yil() +
+      " yılındayız.";
+
+  }
+
+
+  // ==========================================
+  // 8 — BENİM ADIM NE?
+  // ==========================================
+
+  else if (
+    iceriyor(m, [
+      "benim adım ne",
+      "benim adim ne",
+      "adım ne",
+      "adim ne"
+    ])
+  ) {
+
+    if (kullaniciAdi) {
+
+      cevap =
+        "👤 Adın " +
+        kullaniciAdi +
+        ".";
+
+    } else {
+
+      cevap =
+        "🤔 Bana adını henüz söylemedin.";
 
     }
 
+  }
 
-    function tarih() {
 
-      const simdi = new Date();
+  // ==========================================
+  // 9 — SEN KİMSİN?
+  // ==========================================
 
-      return simdi.toLocaleDateString("tr-TR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      });
+  else if (
+    iceriyor(m, [
+      "kimsin",
+      "sen kimsin",
+      "adın ne",
+      "adin ne",
+      "senin adın ne",
+      "senin adin ne"
+    ])
+  ) {
 
+    cevap =
+      "🤖 Ben Çınar AI! Seninle sohbet etmek için buradayım.";
+
+  }
+
+
+  // ==========================================
+  // 10 — TEŞEKKÜR
+  // ==========================================
+
+  else if (
+    iceriyor(m, [
+      "teşekkür",
+      "sağ ol",
+      "sag ol",
+      "eyvallah"
+    ])
+  ) {
+
+    cevap =
+      "😊 Rica ederim!";
+
+  }
+
+
+  // ==========================================
+  // 11 — GÜLE GÜLE
+  // ==========================================
+
+  else if (
+    iceriyor(m, [
+      "güle güle",
+      "gule gule",
+      "hoşça kal",
+      "hosca kal",
+      "görüşürüz",
+      "gorusuruz",
+      "bye"
+    ])
+  ) {
+
+    cevap =
+      "👋 Görüşürüz! Kendine iyi bak!";
+
+  }
+
+
+  // ==========================================
+  // 12 — ANLAŞILMAYAN MESAJ
+  // ==========================================
+
+  if (cevap === null) {
+
+    cevap =
+      "🤔 Bunu tam anlayamadım.\n\n" +
+      "Biraz farklı şekilde yazmayı deneyebilirsin. " +
+      "İstersen \"Neler yapabilirsin?\" diye sorabilirsin. 😊";
+
+  }
+
+
+  // ==========================================
+  // CEVAP
+  // ==========================================
+
+  setTimeout(() => {
+
+    const aiMessage =
+      document.createElement("div");
+
+    aiMessage.className =
+      "message ai";
+
+    aiMessage.textContent =
+      cevap;
+
+    chat.appendChild(aiMessage);
+
+    chat.scrollTop =
+      chat.scrollHeight;
+
+  }, 400);
+
+
+  chat.scrollTop =
+    chat.scrollHeight;
+}
+
+
+// ==========================================
+// ENTER İLE GÖNDER
+// ==========================================
+
+document
+  .getElementById("messageInput")
+  .addEventListener("keypress", function(event) {
+
+    if (event.key === "Enter") {
+      sendMessage();
     }
 
+  });
 
-    function yil() {
+</script>
 
-      return new Date().getFullYear();
-
-    }
-
-
-    // ==================================================
-    // İSİM BULMA
-    // ==================================================
-
-    function adBul(mesaj) {
-
-      const desenler = [
-        /^benim adım (.+)$/i,
-        /^benim adim (.+)$/i,
-        /^adım (.+)$/i,
-        /^adim (.+)$/i
-      ];
-
-      for (const desen of desenler) {
-
-        const sonuc = mesaj.match(desen);
-
-        if (sonuc) {
-
-          let ad = sonuc[1].trim();
-
-          ad = ad.replace(/[.!?]+$/, "").trim();
-
-          if (ad.length > 0 && ad.length <= 30) {
-            return ad;
-          }
-
-        }
-
-      }
-
-      return null;
-
-    }
-
-
-    // ==================================================
-    // MESAJ GÖNDER
-    // ==================================================
-
-    function sendMessage() {
-
-      const input =
-        document.getElementById("messageInput");
-
-      const chat =
-        document.getElementById("chat");
-
-      const mesaj =
-        input.value.trim();
-
-      if (mesaj === "") return;
-
-
-      // Kullanıcı mesajı
-      const userMessage =
-        document.createElement("div");
-
-      userMessage.className =
-        "message user";
-
-      userMessage.textContent =
-        mesaj;
-
-      chat.appendChild(userMessage);
-
-      input.value = "";
-
-
-      // Karşılaştırma için küçük harfe çeviriyoruz
-      const m =
-        mesaj.toLocaleLowerCase("tr-TR").trim();
-
-
-      let cevap = null;
-
-
-      // ==================================================
-      // 1. KULLANICI ADINI SÖYLÜYOR
-      // ==================================================
-
-      const yeniAd = adBul(mesaj);
-
-      if (yeniAd) {
-
-        kullaniciAdi = yeniAd;
-
-        cevap =
-          "😊 Memnun oldum, " +
-          kullaniciAdi +
-          "!";
-
-      }
-
-
-      // ==================================================
-      // 2. MERHABA
-      // ==================================================
-
-      else if (
-        [
-          "merhaba",
-          "selam",
-          "hey",
-          "sa",
-          "selam!",
-          "merhaba!",
-          "hey!"
-        ].includes(m)
-      ) {
-
-        if (kullaniciAdi) {
-
-          cevap =
-            "👋 Merhaba " +
-            kullaniciAdi +
-            "!";
-
-        } else {
-
-          cevap =
-            "👋 Merhaba!";
-
-        }
-
-      }
-
-
-      // ==================================================
-      // 3. NASILSIN
-      // ==================================================
-
-      else if (
-        [
-          "nasılsın",
-          "nasilsin",
-          "iyi misin",
-          "nasılsın?",
-          "nasilsin?"
-        ].includes(m)
-      ) {
-
-        if (kullaniciAdi) {
-
-          cevap =
-            "😊 İyiyim, teşekkür ederim " +
-            kullaniciAdi +
-            "!";
-
-        } else {
-
-          cevap =
-            "😊 İyiyim, teşekkür ederim!";
-
-        }
-
-      }
-
-
-      // ==================================================
-      // 4. SAAT
-      // ==================================================
-
-      else if (
-        [
-          "saat kaç",
-          "saat kac",
-          "şu an saat kaç",
-          "su an saat kac",
-          "şimdi saat kaç",
-          "simdi saat kac",
-          "saat kaç?"
-        ].includes(m)
-      ) {
-
-        cevap =
-          "🕐 Şu an saat " +
-          saat() +
-          ".";
-
-      }
-
-
-      // ==================================================
-      // 5. TARİH
-      // ==================================================
-
-      else if (
-        [
-          "bugün tarih ne",
-          "bugun tarih ne",
-          "bugünün tarihi ne",
-          "bugunun tarihi ne",
-          "bugün hangi tarih",
-          "bugun hangi tarih",
-          "tarih ne",
-          "bugün tarih ne?"
-        ].includes(m)
-      ) {
-
-        cevap =
-          "📅 Bugünün tarihi " +
-          tarih() +
-          ".";
-
-      }
-
-
-      // ==================================================
-      // 6. YIL
-      // ==================================================
-
-      else if (
-        [
-          "hangi yıldayız",
-          "hangi yildayiz",
-          "şu an hangi yıldayız",
-          "su an hangi yildayiz",
-          "hangi yıl",
-          "hangi yil",
-          "yıl kaç",
-          "yil kac"
-        ].includes(m)
-      ) {
-
-        cevap =
-          "📆 Şu anda " +
-          yil() +
-          " yılındayız.";
-
-      }
-
-
-      // ==================================================
-      // 7. BENİM ADIM NE?
-      // ==================================================
-
-      else if (
-        [
-          "benim adım ne",
-          "benim adim ne",
-          "adım ne",
-          "adim ne",
-          "benim adım ne?",
-          "adım ne?"
-        ].includes(m)
-      ) {
-
-        if (kullaniciAdi) {
-
-          cevap =
-            "👤 Adın " +
-            kullaniciAdi +
-            ".";
-
-        } else {
-
-          cevap =
-            "🤔 Bana adını henüz söylemedin.";
-
-        }
-
-      }
-
-
-      // ==================================================
-      // 8. SEN KİMSİN?
-      // ==================================================
-
-      else if (
-        [
-          "kimsin",
-          "sen kimsin",
-          "sen kimsin?",
-          "adın ne",
-          "adin ne"
-        ].includes(m)
-      ) {
-
-        cevap =
-          "🤖 Ben Çınar AI! Seninle sohbet etmek için buradayım.";
-
-      }
-
-
-      // ==================================================
-      // 9. TEŞEKKÜR
-      // ==================================================
-
-      else if (
-        [
-          "teşekkürler",
-          "tesekkurler",
-          "teşekkür ederim",
-          "tesekkur ederim",
-          "sağ ol",
-          "sag ol"
-        ].includes(m)
-      ) {
-
-        cevap =
-          "😊 Rica ederim!";
-
-      }
-
-
-      // ==================================================
-      // 10. GÜLE GÜLE
-      // ==================================================
-
-      else if (
-        [
-          "güle güle",
-          "gule gule",
-          "hoşça kal",
-          "hosca kal",
-          "bye"
-        ].includes(m)
-      ) {
-
-        cevap =
-          "👋 Görüşürüz! Kendine iyi bak!";
-
-      }
-
-
-      // ==================================================
-      // 11. SEÇİLMEMİŞ SORULAR
-      // ==================================================
-
-      if (cevap === null) {
-
-        const genelCevaplar = [
-
-          "🤔 Bunu biraz daha açıklar mısın?",
-
-          "😊 İlginç! Biraz daha anlatır mısın?",
-
-          "💡 Bunu daha ayrıntılı anlatabilir misin?",
-
-          "🤖 Bu konuda henüz öğreneceklerim var.",
-
-          "👍 Anladım! Devam edebilirsin.",
-
-          "🤔 Hmm... Bunun hakkında biraz daha konuşalım.",
-
-          "😊 Anladım. Başka bir şey sormak ister misin?"
-
-        ];
-
-
-        cevap =
-          genelCevaplar[
-            Math.floor(
-              Math.random() * genelCevaplar.length
-            )
-          ];
-
-      }
-
-
-      // ==================================================
-      // AI CEVABI
-      // ==================================================
-
-      setTimeout(() => {
-
-        const aiMessage =
-          document.createElement("div");
-
-        aiMessage.className =
-          "message ai";
-
-        aiMessage.textContent =
-          cevap;
-
-        chat.appendChild(aiMessage);
-
-        chat.scrollTop =
-          chat.scrollHeight;
-
-      }, 500);
-
-
-      chat.scrollTop =
-        chat.scrollHeight;
-
-    }
-
-
-    // ==================================================
-    // ENTER İLE GÖNDER
-    // ==================================================
-
-    document
-      .getElementById("messageInput")
-      .addEventListener(
-        "keypress",
-        function(event) {
-
-          if (event.key === "Enter") {
-            sendMessage();
-          }
-
-        }
-      );
-
-  </script></body>
+</body>
 </html>
