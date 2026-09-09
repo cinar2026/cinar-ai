@@ -99,7 +99,7 @@ button:active {
     <div class="message ai">
         Merhaba! 👋 Ben Çınar AI.<br>
         Bana istediğin şeyi yazabilirsin. 😊<br>
-        Matematik işlemlerini de çözebilirim! 🧮
+        Matematik sorularını farklı şekillerde de anlayabilirim. 🧮
     </div>
 </div>
 
@@ -115,6 +115,10 @@ button:active {
 
 <script>
 
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+
+
 /* ================================
    YAZIYI NORMALLEŞTİR
 ================================ */
@@ -122,14 +126,15 @@ button:active {
 function normalizeText(text) {
     return text
         .toLocaleLowerCase("tr-TR")
-        .replace(/[.,!?;:()[\]{}'"`]/g, " ")
+        .replace(/İ/g, "i")
+        .replace(/I/g, "ı")
         .replace(/\s+/g, " ")
         .trim();
 }
 
 
 /* ================================
-   SIK YAPILAN HATALAR
+   SIK YAPILAN YAZIM HATALARI
 ================================ */
 
 const corrections = {
@@ -145,20 +150,14 @@ const corrections = {
     "nasılsn": "nasılsın",
     "nasılsı": "nasılsın",
 
-    "naber": "ne haber",
-    "naberr": "ne haber",
-    "nehaber": "ne haber",
-
     "tesekkur": "teşekkür",
     "tesekkurler": "teşekkürler",
     "tsk": "teşekkür",
-    "tşk": "teşekkür",
 
     "sagol": "sağ ol",
     "saol": "sağ ol",
 
     "saatkac": "saat kaç",
-    "saatkaç": "saat kaç",
     "saat kac": "saat kaç",
 
     "simdi": "şimdi",
@@ -176,12 +175,22 @@ const corrections = {
     "edermisin": "eder misin",
 
     "cok": "çok",
-    "cinar": "çınar"
+    "cinar": "çınar",
+
+    "carpi": "çarpı",
+    "carp": "çarp",
+    "kac": "kaç",
+    "bolu": "bölü",
+    "bol": "böl",
+    "eksi": "eksi",
+    "arti": "artı",
+    "topla": "topla",
+    "cikar": "çıkar"
 };
 
 
 /* ================================
-   FAZLA HARFLERİ AZALT
+   TEKRARLANAN HARFLERİ AZALT
 ================================ */
 
 function reduceRepeatedLetters(word) {
@@ -213,34 +222,21 @@ function fixText(text) {
 
 
 /* ================================
-   SAAT SORUSU
+   SAAT
 ================================ */
 
 function isTimeQuestion(text) {
 
-    const words = [
-        "saat kaç",
-        "saat kac",
-        "saatkac",
-        "saat kaç oldu",
-        "saat kac oldu",
-        "şu an saat kaç",
-        "su an saat kac",
-        "şuan saat kaç",
-        "suan saat kac",
-        "şimdi saat kaç",
-        "simdi saat kac",
-        "şu an saat kaç oldu",
-        "su an saat kac oldu"
-    ];
-
-    return words.some(x => text.includes(x));
+    return (
+        text.includes("saat kaç") ||
+        text.includes("saat kac") ||
+        text.includes("saatkac") ||
+        text.includes("şu an saat") ||
+        text.includes("su an saat") ||
+        text.includes("şimdi saat")
+    );
 }
 
-
-/* ================================
-   SAATİ SÖYLE
-================================ */
 
 function getCurrentTime() {
 
@@ -256,37 +252,28 @@ function getCurrentTime() {
 
 
 /* ================================
-   TARİH SORUSU
+   TARİH
 ================================ */
 
 function isDateQuestion(text) {
 
-    if (text.includes("bugünün tarihi")) return true;
-    if (text.includes("bugunun tarihi")) return true;
-    if (text.includes("bugün tarih")) return true;
-    if (text.includes("bugun tarih")) return true;
-
-    if (text.includes("tarih ne")) return true;
-    if (text.includes("tarih nedir")) return true;
-
-    if (text.includes("hangi tarihteyiz")) return true;
-
-    if (text.includes("bugün ayın kaçı")) return true;
-    if (text.includes("bugun ayin kaci")) return true;
-
-    if (text.includes("ayın kaçı")) return true;
-    if (text.includes("ayin kaci")) return true;
-
-    if (text.includes("bugün hangi tarih")) return true;
-    if (text.includes("bugun hangi tarih")) return true;
-
-    return false;
+    return (
+        text.includes("bugünün tarihi") ||
+        text.includes("bugunun tarihi") ||
+        text.includes("bugün tarih") ||
+        text.includes("bugun tarih") ||
+        text.includes("tarih ne") ||
+        text.includes("tarih nedir") ||
+        text.includes("hangi tarihteyiz") ||
+        text.includes("bugün hangi tarih") ||
+        text.includes("bugun hangi tarih") ||
+        text.includes("ayın kaçı") ||
+        text.includes("ayin kaci") ||
+        text.includes("bugün ayın kaçı") ||
+        text.includes("bugun ayin kaci")
+    );
 }
 
-
-/* ================================
-   TAM TARİHİ SÖYLE
-================================ */
 
 function getCurrentDate() {
 
@@ -305,211 +292,235 @@ function getCurrentDate() {
 
 
 /* ================================
-   YIL SORUSU
+   YIL
 ================================ */
 
 function isYearQuestion(text) {
 
-    if (text.includes("hangi yıldayız")) return true;
-    if (text.includes("hangi yildayiz")) return true;
-    if (text.includes("hangi yıl")) return true;
-    if (text.includes("hangi yil")) return true;
-    if (text.includes("şu an hangi yıl")) return true;
-    if (text.includes("su an hangi yil")) return true;
-    if (text.includes("bu yıl kaç")) return true;
-    if (text.includes("bu yil kac")) return true;
-
-    return false;
+    return (
+        text.includes("hangi yıldayız") ||
+        text.includes("hangi yildayiz") ||
+        text.includes("hangi yıl") ||
+        text.includes("hangi yil") ||
+        text.includes("şu an hangi yıl") ||
+        text.includes("su an hangi yil") ||
+        text.includes("bu yıl kaç") ||
+        text.includes("bu yil kac")
+    );
 }
 
 
-/* ================================
-   YILI SÖYLE
-================================ */
-
 function getCurrentYear() {
 
-    const year = new Date().getFullYear();
-
     return "📅 Şu an <b>" +
-        year +
+        new Date().getFullYear() +
         "</b> yılındayız.";
 }
 
 
-/* ================================
-   MATEMATİK İŞLEMİ Mİ?
-================================ */
+/* =================================================
+   MATEMATİK SİSTEMİ
+================================================= */
 
-function isMathQuestion(text) {
 
-    const mathWords = [
-        "kaç",
-        "kac",
-        "hesapla",
-        "işlemin sonucu",
-        "islemin sonucu",
-        "sonuç",
-        "sonuc",
-        "topla",
-        "toplam",
-        "çarp",
-        "carp",
-        "çarpı",
-        "carpi",
-        "kere",
-        "böl",
-        "bol",
-        "bölü",
-        "bolu",
-        "çıkar",
-        "cikar",
-        "eksi"
-    ];
+/*
+   Matematik kelimelerini sembollere çevirir.
+*/
 
-    const hasNumber = /\d/.test(text);
-    const hasOperator =
-        /[+\-*/×÷^=]/.test(text) ||
-        mathWords.some(word => text.includes(word));
+function convertMathWords(text) {
 
-    return hasNumber && hasOperator;
+    let result = text;
+
+    result = result.replace(/çarpı/g, " * ");
+    result = result.replace(/carpi/g, " * ");
+    result = result.replace(/çarp/g, " * ");
+    result = result.replace(/carp/g, " * ");
+
+    result = result.replace(/kere/g, " * ");
+
+    result = result.replace(/bölü/g, " / ");
+    result = result.replace(/bolu/g, " / ");
+    result = result.replace(/\bböl\b/g, " / ");
+    result = result.replace(/\bbol\b/g, " / ");
+
+    result = result.replace(/artı/g, " + ");
+    result = result.replace(/arti/g, " + ");
+
+    result = result.replace(/eksi/g, " - ");
+
+    result = result.replace(/çıkar/g, " - ");
+    result = result.replace(/cikar/g, " - ");
+
+    result = result.replace(/üzeri/g, " ^ ");
+    result = result.replace(/uzeri/g, " ^ ");
+
+    return result;
 }
 
 
-/* ================================
-   MATEMATİK METNİNİ TEMİZLE
-================================ */
+/*
+   Matematik sorusu olup olmadığını kontrol eder.
+*/
 
-function prepareMath(text) {
+function looksLikeMath(text) {
 
-    let expression = text
-        .toLocaleLowerCase("tr-TR")
-        .replace(/,/g, ".")
-        .replace(/×/g, "*")
-        .replace(/÷/g, "/")
-        .replace(/çarpı/g, "*")
-        .replace(/carpi/g, "*")
-        .replace(/kere/g, "*")
-        .replace(/çarp/g, "*")
-        .replace(/carp/g, "*")
-        .replace(/bölü/g, "/")
-        .replace(/bolu/g, "/")
-        .replace(/böl/g, "/")
-        .replace(/bol/g, "/")
-        .replace(/artı/g, "+")
-        .replace(/arti/g, "+")
-        .replace(/topla/g, "+")
-        .replace(/eksi/g, "-")
-        .replace(/çıkar/g, "-")
-        .replace(/cikar/g, "-")
-        .replace(/üzeri/g, "^")
-        .replace(/uzeri/g, "^")
-        .replace(/kuvveti/g, "^");
+    const hasNumbers = /\d/.test(text);
 
-    /*
-       Soru cümlesindeki matematik dışı kelimeleri
-       kaldırıyoruz.
-    */
+    if (!hasNumbers) {
+        return false;
+    }
 
-    expression = expression
-        .replace(/kaçtır/g, "")
-        .replace(/kactir/g, "")
-        .replace(/kaç/g, "")
-        .replace(/kac/g, "")
-        .replace(/nedir/g, "")
-        .replace(/sonucu/g, "")
-        .replace(/sonuç/g, "")
-        .replace(/sonuc/g, "")
-        .replace(/hesapla/g, "")
-        .replace(/işlemin/g, "")
-        .replace(/islemin/g, "")
-        .replace(/işlemi/g, "")
-        .replace(/islemi/g, "")
-        .replace(/=?/g, "");
+    const mathWords =
+        /çarpı|carpi|çarp|carp|kere|bölü|bolu|\bböl\b|\bbol\b|artı|arti|eksi|çıkar|cikar|toplam|çarpımı|carpimi|farkı|farki|sonucu|hesapla|kaç|kac|\+|\-|\*|\/|×|÷|\^/i;
 
-    /*
-       Sadece güvenli matematik karakterlerini bırak.
-    */
-
-    expression = expression.replace(/[^0-9+\-*/().^%\s]/g, "");
-
-    return expression.trim();
+    return mathWords.test(text);
 }
 
 
-/* ================================
-   MATEMATİK ÇÖZ
-================================ */
+/*
+   Metindeki sayıları bulur.
+*/
 
-function calculateMath(text) {
+function extractNumbers(text) {
 
-    let expression = prepareMath(text);
+    const matches = text.match(/-?\d+(?:[.,]\d+)?/g);
 
-    if (!expression) {
+    if (!matches) {
+        return [];
+    }
+
+    return matches.map(number => {
+        return Number(number.replace(",", "."));
+    });
+}
+
+
+/*
+   Matematik işlemini bul.
+*/
+
+function detectOperation(text) {
+
+    if (
+        text.includes("çarpı") ||
+        text.includes("carpi") ||
+        text.includes("çarp") ||
+        text.includes("carp") ||
+        text.includes("kere") ||
+        text.includes("çarpımı") ||
+        text.includes("carpimi") ||
+        text.includes("*") ||
+        text.includes("×")
+    ) {
+        return "*";
+    }
+
+    if (
+        text.includes("bölü") ||
+        text.includes("bolu") ||
+        text.includes(" böl ") ||
+        text.includes(" bol ") ||
+        text.includes("/") ||
+        text.includes("÷")
+    ) {
+        return "/";
+    }
+
+    if (
+        text.includes("artı") ||
+        text.includes("arti") ||
+        text.includes("toplam") ||
+        text.includes("+")
+    ) {
+        return "+";
+    }
+
+    if (
+        text.includes("eksi") ||
+        text.includes("çıkar") ||
+        text.includes("cikar") ||
+        text.includes("farkı") ||
+        text.includes("farki") ||
+        text.includes("-")
+    ) {
+        return "-";
+    }
+
+    if (text.includes("^") || text.includes("üzeri")) {
+        return "^";
+    }
+
+    return null;
+}
+
+
+/*
+   Matematik işlemini hesaplar.
+*/
+
+function calculateMathQuestion(text) {
+
+    const numbers = extractNumbers(text);
+    const operation = detectOperation(text);
+
+    if (numbers.length < 2 || !operation) {
         return null;
     }
 
-    /*
-       Çok uzun veya şüpheli ifadeleri çalıştırma.
-    */
+    let result;
 
-    if (expression.length > 100) {
-        return null;
+    switch (operation) {
+
+        case "+":
+            result = numbers.reduce((a, b) => a + b, 0);
+            break;
+
+        case "-":
+            result = numbers.slice(1).reduce(
+                (a, b) => a - b,
+                numbers[0]
+            );
+            break;
+
+        case "*":
+            result = numbers.reduce((a, b) => a * b, 1);
+            break;
+
+        case "/":
+
+            if (numbers.slice(1).some(n => n === 0)) {
+                return "❌ Sıfıra bölme yapılamaz.";
+            }
+
+            result = numbers.slice(1).reduce(
+                (a, b) => a / b,
+                numbers[0]
+            );
+
+            break;
+
+        case "^":
+            result = Math.pow(numbers[0], numbers[1]);
+            break;
+
+        default:
+            return null;
     }
 
-    /*
-       Sadece matematik karakterleri olduğundan emin ol.
-    */
-
-    if (!/^[0-9+\-*/().^%\s]+$/.test(expression)) {
-        return null;
+    if (!Number.isFinite(result)) {
+        return "❌ Bu işlemin sonucu hesaplanamadı.";
     }
 
-    /*
-       Bölme işlemlerinde sıfıra bölmeyi kontrol et.
-    */
+    let formatted;
 
-    if (/\/\s*0(\D|$)/.test(expression)) {
-        return "❌ Sıfıra bölme yapılamaz.";
+    if (Number.isInteger(result)) {
+        formatted = result.toLocaleString("tr-TR");
+    } else {
+        formatted = Number(result.toFixed(10))
+            .toLocaleString("tr-TR");
     }
 
-    try {
-
-        /*
-           JavaScript'te ^ XOR olduğu için
-           matematikte üs anlamına gelecek şekilde
-           ** operatörüne dönüştürüyoruz.
-        */
-
-        expression = expression.replace(/\^/g, "**");
-
-        /*
-           Matematik ifadesini hesapla.
-        */
-
-        const result = Function(
-            '"use strict"; return (' + expression + ')'
-        )();
-
-        if (!Number.isFinite(result)) {
-            return "❌ Bu işlemin sonucu hesaplanamadı.";
-        }
-
-        let formattedResult;
-
-        if (Number.isInteger(result)) {
-            formattedResult = result.toLocaleString("tr-TR");
-        } else {
-            formattedResult = Number(result.toFixed(10))
-                .toLocaleString("tr-TR");
-        }
-
-        return "🧮 Sonuç: <b>" + formattedResult + "</b>";
-
-    } catch (error) {
-
-        return null;
-    }
+    return "🧮 <b>Sonuç: " + formatted + "</b>";
 }
 
 
@@ -525,9 +536,9 @@ function getAnswer(message) {
 
     /* MATEMATİK */
 
-    if (isMathQuestion(text)) {
+    if (looksLikeMath(text)) {
 
-        const mathAnswer = calculateMath(text);
+        const mathAnswer = calculateMathQuestion(text);
 
         if (mathAnswer !== null) {
             return mathAnswer;
@@ -616,7 +627,7 @@ function getAnswer(message) {
         text.includes("ne yapabilirsin") ||
         text.includes("neler yapabilirsin")
     ) {
-        return "Sorularını cevaplayabilir, sohbet edebilir, matematik işlemlerini çözebilir, saati ve bugünün tarihini söyleyebilir ve sık yapılan yazım hatalarını anlayabilirim. 😊";
+        return "Sorularını cevaplayabilir, farklı şekillerde yazılmış matematik işlemlerini çözebilir, sohbet edebilir, saati ve tarihi söyleyebilirim. 😊";
     }
 
 
@@ -650,7 +661,7 @@ function getAnswer(message) {
     }
 
 
-    /* YAZIM HATASI ALGILANDI */
+    /* YAZIM HATASI */
 
     if (original !== text) {
         return "Seni anladım. 😊 Yazım hatası olsa bile ne demek istediğini anlayabiliyorum.";
@@ -672,7 +683,6 @@ function addMessage(text, type) {
     const div = document.createElement("div");
 
     div.className = "message " + type;
-
     div.innerHTML = text;
 
     chat.appendChild(div);
@@ -708,7 +718,7 @@ function sendMessage() {
 
 
 /* ================================
-   ENTER TUŞU
+   ENTER
 ================================ */
 
 input.addEventListener("keydown", function(event) {
