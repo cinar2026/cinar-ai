@@ -98,7 +98,8 @@ button:active {
 <div id="chat">
     <div class="message ai">
         Merhaba! 👋 Ben Çınar AI.<br>
-        Bana istediğin şeyi yazabilirsin. 😊
+        Bana istediğin şeyi yazabilirsin. 😊<br>
+        Matematik işlemlerini de çözebilirim! 🧮
     </div>
 </div>
 
@@ -260,14 +261,6 @@ function getCurrentTime() {
 
 function isDateQuestion(text) {
 
-    /*
-       Burada özellikle sadece birkaç cümleye
-       bağlı kalmıyoruz.
-
-       Kullanıcı "tarih" veya "bugün" dediğinde
-       tarih sorusu olarak algılamaya çalışıyoruz.
-    */
-
     if (text.includes("bugünün tarihi")) return true;
     if (text.includes("bugunun tarihi")) return true;
     if (text.includes("bugün tarih")) return true;
@@ -276,7 +269,6 @@ function isDateQuestion(text) {
     if (text.includes("tarih ne")) return true;
     if (text.includes("tarih nedir")) return true;
 
-    if (text.includes("hangi tarihteyiz")) return true;
     if (text.includes("hangi tarihteyiz")) return true;
 
     if (text.includes("bugün ayın kaçı")) return true;
@@ -294,7 +286,6 @@ function isDateQuestion(text) {
 
 /* ================================
    TAM TARİHİ SÖYLE
-   GG.AA.YYYY
 ================================ */
 
 function getCurrentDate() {
@@ -347,6 +338,182 @@ function getCurrentYear() {
 
 
 /* ================================
+   MATEMATİK İŞLEMİ Mİ?
+================================ */
+
+function isMathQuestion(text) {
+
+    const mathWords = [
+        "kaç",
+        "kac",
+        "hesapla",
+        "işlemin sonucu",
+        "islemin sonucu",
+        "sonuç",
+        "sonuc",
+        "topla",
+        "toplam",
+        "çarp",
+        "carp",
+        "çarpı",
+        "carpi",
+        "kere",
+        "böl",
+        "bol",
+        "bölü",
+        "bolu",
+        "çıkar",
+        "cikar",
+        "eksi"
+    ];
+
+    const hasNumber = /\d/.test(text);
+    const hasOperator =
+        /[+\-*/×÷^=]/.test(text) ||
+        mathWords.some(word => text.includes(word));
+
+    return hasNumber && hasOperator;
+}
+
+
+/* ================================
+   MATEMATİK METNİNİ TEMİZLE
+================================ */
+
+function prepareMath(text) {
+
+    let expression = text
+        .toLocaleLowerCase("tr-TR")
+        .replace(/,/g, ".")
+        .replace(/×/g, "*")
+        .replace(/÷/g, "/")
+        .replace(/çarpı/g, "*")
+        .replace(/carpi/g, "*")
+        .replace(/kere/g, "*")
+        .replace(/çarp/g, "*")
+        .replace(/carp/g, "*")
+        .replace(/bölü/g, "/")
+        .replace(/bolu/g, "/")
+        .replace(/böl/g, "/")
+        .replace(/bol/g, "/")
+        .replace(/artı/g, "+")
+        .replace(/arti/g, "+")
+        .replace(/topla/g, "+")
+        .replace(/eksi/g, "-")
+        .replace(/çıkar/g, "-")
+        .replace(/cikar/g, "-")
+        .replace(/üzeri/g, "^")
+        .replace(/uzeri/g, "^")
+        .replace(/kuvveti/g, "^");
+
+    /*
+       Soru cümlesindeki matematik dışı kelimeleri
+       kaldırıyoruz.
+    */
+
+    expression = expression
+        .replace(/kaçtır/g, "")
+        .replace(/kactir/g, "")
+        .replace(/kaç/g, "")
+        .replace(/kac/g, "")
+        .replace(/nedir/g, "")
+        .replace(/sonucu/g, "")
+        .replace(/sonuç/g, "")
+        .replace(/sonuc/g, "")
+        .replace(/hesapla/g, "")
+        .replace(/işlemin/g, "")
+        .replace(/islemin/g, "")
+        .replace(/işlemi/g, "")
+        .replace(/islemi/g, "")
+        .replace(/=?/g, "");
+
+    /*
+       Sadece güvenli matematik karakterlerini bırak.
+    */
+
+    expression = expression.replace(/[^0-9+\-*/().^%\s]/g, "");
+
+    return expression.trim();
+}
+
+
+/* ================================
+   MATEMATİK ÇÖZ
+================================ */
+
+function calculateMath(text) {
+
+    let expression = prepareMath(text);
+
+    if (!expression) {
+        return null;
+    }
+
+    /*
+       Çok uzun veya şüpheli ifadeleri çalıştırma.
+    */
+
+    if (expression.length > 100) {
+        return null;
+    }
+
+    /*
+       Sadece matematik karakterleri olduğundan emin ol.
+    */
+
+    if (!/^[0-9+\-*/().^%\s]+$/.test(expression)) {
+        return null;
+    }
+
+    /*
+       Bölme işlemlerinde sıfıra bölmeyi kontrol et.
+    */
+
+    if (/\/\s*0(\D|$)/.test(expression)) {
+        return "❌ Sıfıra bölme yapılamaz.";
+    }
+
+    try {
+
+        /*
+           JavaScript'te ^ XOR olduğu için
+           matematikte üs anlamına gelecek şekilde
+           ** operatörüne dönüştürüyoruz.
+        */
+
+        expression = expression.replace(/\^/g, "**");
+
+        /*
+           Matematik ifadesini hesapla.
+        */
+
+        const result = Function(
+            '"use strict"; return (' + expression + ')'
+        )();
+
+        if (!Number.isFinite(result)) {
+            return "❌ Bu işlemin sonucu hesaplanamadı.";
+        }
+
+        let formattedResult;
+
+        if (Number.isInteger(result)) {
+            formattedResult = result.toLocaleString("tr-TR");
+        } else {
+            formattedResult = Number(result.toFixed(10))
+                .toLocaleString("tr-TR");
+        }
+
+        return "🧮 Sonuç: <b>" + formattedResult + "</b>";
+
+    } catch (error) {
+
+        return null;
+    }
+}
+
+
+/* ================================
    ÇINAR AI CEVAP MOTORU
 ================================ */
 
@@ -354,6 +521,18 @@ function getAnswer(message) {
 
     const original = normalizeText(message);
     const text = fixText(message);
+
+
+    /* MATEMATİK */
+
+    if (isMathQuestion(text)) {
+
+        const mathAnswer = calculateMath(text);
+
+        if (mathAnswer !== null) {
+            return mathAnswer;
+        }
+    }
 
 
     /* TARİH */
@@ -437,7 +616,7 @@ function getAnswer(message) {
         text.includes("ne yapabilirsin") ||
         text.includes("neler yapabilirsin")
     ) {
-        return "Sorularını cevaplayabilir, sohbet edebilir, saati ve bugünün tarihini söyleyebilir ve sık yapılan yazım hatalarını anlayabilirim. 😊";
+        return "Sorularını cevaplayabilir, sohbet edebilir, matematik işlemlerini çözebilir, saati ve bugünün tarihini söyleyebilir ve sık yapılan yazım hatalarını anlayabilirim. 😊";
     }
 
 
